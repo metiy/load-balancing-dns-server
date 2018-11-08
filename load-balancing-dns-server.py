@@ -9,7 +9,7 @@ import time;
 
 #config
 http_port   = 80
-password    = 'k'
+password    = 'kkkkkkkk'
 
 ip_list     = []
 ip_ttl      = {}
@@ -20,10 +20,6 @@ class DynamicResolver(object):
 	def _doDynamicResponse(self, query):
 		idx = random.randint(0,len(ip_list)-1 )
 		ip  = ip_list[idx]
-
-		if time.time() - ip_ttl[ip] > timeout :
-			del ip_ttl[ip]
-			del ip_list[idx]
 
 		print (ip , query.name.name)
 
@@ -80,6 +76,14 @@ class MyHTTPFactory(http.HTTPFactory):
 		return MyHTTP()
 
 
+def CheckTimeout():
+	num = len(ip_list)
+	for idx in range( num-1 , -1 , -1) :
+		ip  = ip_list[idx]
+		if time.time() - ip_ttl[ip] > timeout :
+			del ip_ttl[ip]
+			del ip_list[idx]
+
 def main():
 
 	factory = server.DNSServerFactory(
@@ -89,6 +93,10 @@ def main():
 	reactor.listenUDP(53, protocol)
 
 	reactor.listenTCP(http_port,MyHTTPFactory())
+
+
+	l = task.LoopingCall(CheckTimeout)
+	l.start(10.0)
 
 	reactor.run()
 
